@@ -1,46 +1,30 @@
-import jwt from "jsonwebtoken";
+import axios from "axios";
 import * as Yup from "yup";
-import authConfig from "../../config/auth";
-import User from "../models/User";
 
-class SessionController {
-  async store(req, res) {
+class Autenticacao {
+  async login(req, res) {
     const schema = Yup.object().shape({
-      email: Yup.string().email(),
-      password: Yup.string().required(),
+      login: Yup.string().required(),
+      senha: Yup.string().required(),
+      idModulo: Yup.number().required(),
     });
 
-    if (!(await schema.isValid(req.body))) {
+    const { login, senha, idModulo } = req.body;
+
+    if (!(await schema.isValid({ login, senha, idModulo }))) {
       return res.status(400).json({ error: "Verifique os campos enviados" });
     }
 
-    const { email, password } = req.body;
+    const response = await axios.post(
+      "https://osautenticacao.azurewebsites.net/api/v1/Autenticar/V2",
+      {
+        login,
+        senha,
+        idModulo,
+      }
+    );
 
-    const user = await User.findOne({
-      where: { email },
-    });
-
-    if (!user) {
-      return res.status(401).json({ error: "Usuário não encontrado!" });
-    }
-
-    if (!(await user.checkPassword(password))) {
-      return res.status(401).json({ error: "A senha não corresponde" });
-    }
-
-    const { id, name } = user;
-
-    return res.json({
-      user: {
-        id,
-        name,
-        email,
-      },
-      token: jwt.sign({ id }, authConfig.secret, {
-        expiresIn: authConfig.expiresIn,
-      }),
-    });
+    console.log(response);
   }
 }
-
-export default new SessionController();
+export default new Autenticacao()

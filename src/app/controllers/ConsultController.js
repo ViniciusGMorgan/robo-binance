@@ -44,7 +44,8 @@ async function privateCall(path, data = {}, method = "GET") {
 
 class ConsultController {
   async orders(req, res) {
-    const { symbol, limit } = req.query;
+    const { symbol } = req.query;
+    const limit = 5
     let buy = "Indisponível no momento",
       sell = "Indisponível no momento";
 
